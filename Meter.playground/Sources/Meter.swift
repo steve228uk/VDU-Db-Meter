@@ -7,6 +7,7 @@ import XCPlayground
 open class Meter: NSView {
     
     var bar: CAGradientLayer!
+    var mask: CALayer!
     var recorder: AVAudioRecorder!
     var timer: Timer!
     var label: NSTextField!
@@ -67,25 +68,8 @@ open class Meter: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.black.cgColor
         
-        let color1 = NSColor(red:1.00, green:0.00, blue:0.80, alpha:1.0).cgColor
-        let color2 = NSColor(red:0.20, green:0.20, blue:0.60, alpha:1.0).cgColor
-        
-        bar = CAGradientLayer()
-        bar.startPoint = CGPoint(x: 0, y: 0)
-        bar.endPoint = CGPoint(x: 1, y: 0)
-        bar.frame = CGRect(x: 0, y: 0, width: frame.size.width, height: 50)
-        bar.colors = [color2, color1]
-        
-        layer?.addSublayer(bar)
-        
-        label = NSTextField(frame: CGRect(x: 0, y: 50, width: 200, height: 50))
-        label.textColor = NSColor.white
-        label.font = NSFont.systemFont(ofSize: 24)
-        label.isEditable = false
-        label.stringValue = "0Db"
-        label.backgroundColor = NSColor.black
-        label.isBordered = false
-        addSubview(label)
+        addBar()
+        addLabel()
         
         timer = Timer.scheduledTimer(timeInterval: 0.1, target: self, selector: #selector(updateMeter), userInfo: nil, repeats: true)
         
@@ -95,12 +79,43 @@ open class Meter: NSView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func addLabel() {
+        label = NSTextField(frame: CGRect(x: 0, y: 50, width: 200, height: 50))
+        label.textColor = NSColor.white
+        label.font = NSFont.systemFont(ofSize: 24)
+        label.isEditable = false
+        label.stringValue = "0dB"
+        label.backgroundColor = NSColor.black
+        label.isBordered = false
+        addSubview(label)
+    }
+    
+    func addBar() {
+        
+        mask = CALayer()
+        mask.frame = CGRect(x: 0, y: 0, width: 0, height: 50)
+        mask.masksToBounds = true
+        layer?.addSublayer(mask)
+        
+        
+        let color1 = NSColor(red:1.00, green:0.00, blue:0.80, alpha:1.0).cgColor
+        let color2 = NSColor(red:0.20, green:0.20, blue:0.60, alpha:1.0).cgColor
+        bar = CAGradientLayer()
+        bar.startPoint = CGPoint(x: 0, y: 0)
+        bar.endPoint = CGPoint(x: 1, y: 0)
+        bar.frame = CGRect(x: 0, y: 0, width: frame.size.width, height: 50)
+        bar.colors = [color2, color1]
+
+        mask.addSublayer(bar)
+    }
+    
+    
     func updateMeter() {
         recorder.updateMeters()
         updated?(pos)
-        label.stringValue = "\(Int(pos))Db"
+        label.stringValue = "\(Int(pos))dB"
         
-        bar.frame = CGRect(x: 0, y: 0, width: frame.size.width * CGFloat(level), height: bar.bounds.size.height)
+        mask.frame = CGRect(x: 0, y: 0, width: frame.size.width * CGFloat(level), height: bar.bounds.size.height)
     }
     
 }
